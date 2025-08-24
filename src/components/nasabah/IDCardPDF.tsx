@@ -21,7 +21,7 @@ export function IDCardPDF({ nasabah }: IDCardPDFProps) {
       <div className="w-full h-full bg-gradient-to-r from-[#4CAD51] to-[#2195ED] text-white p-8 flex flex-col">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold tracking-wider">KARTU TANDA ANGGOTA</h1>
-          <p className="text-3xl mt-2 opacity-90">Bank Sampah RW {rw} Kel. Tambangan</p>
+          <p className="text-3xl mt-2 opacity-90">Bank Sampah Sido Makmur</p>
         </div>
 
         <div className="flex-grow flex items-center gap-8">

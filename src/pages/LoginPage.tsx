@@ -85,7 +85,7 @@ export function LoginPage() {
               Masuk Admin
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Bank Sampah Digital
+              Bank Sampah Sido Makmur
             </CardDescription>
           </div>
         </CardHeader>
@@ -246,18 +246,6 @@ export function LoginPage() {
               )}
             </Button>
           </form>
-
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Belum punya akun?{' '}
-              <Link 
-                to="/register" 
-                className="text-primary hover:text-primary-glow font-medium transition-colors"
-              >
-                Daftar di sini
-              </Link>
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
