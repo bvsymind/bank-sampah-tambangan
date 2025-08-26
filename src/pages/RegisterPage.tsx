@@ -78,7 +78,7 @@ export function RegisterPage() {
               Daftar Admin
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Buat akun admin Bank Sampah Digital
+              Bank Sampah Sido Makmur
             </CardDescription>
           </div>
         </CardHeader>

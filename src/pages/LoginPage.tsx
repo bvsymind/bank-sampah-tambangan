@@ -246,6 +246,17 @@ export function LoginPage() {
               )}
             </Button>
           </form>
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Belum punya akun?{' '}
+              <Link
+                to="/register"
+                className="text-primary hover:text-primary-glow font-medium transition-colors"
+              >
+                Daftar di sini
+              </Link>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
