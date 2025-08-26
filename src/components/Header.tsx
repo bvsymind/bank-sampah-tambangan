@@ -42,7 +42,7 @@ export function Header({ title }: HeaderProps) {
                 {title}
               </h1>
               <p className="text-white/80 text-sm">
-                Bank Sampah Digital
+                Bank Sampah Sido Makmur
               </p>
             </div>
           </div>

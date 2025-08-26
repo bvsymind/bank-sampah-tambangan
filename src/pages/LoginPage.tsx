@@ -146,14 +146,14 @@ export function LoginPage() {
             <div className="flex justify-end">
               <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button 
+                  {/* <Button 
                     type="button" 
                     variant="link" 
                     className="p-0 h-auto text-primary hover:text-primary-glow"
                     disabled={loading}
                   >
                     Lupa Password?
-                  </Button>
+                  </Button> */}
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
