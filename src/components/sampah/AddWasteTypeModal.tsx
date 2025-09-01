@@ -1,5 +1,3 @@
-// src/components/sampah/AddWasteTypeModal.tsx
-
 import { useState } from "react";
 import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 interface AddWasteTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (wasteType: any) => Promise<void>; // Disesuaikan agar bisa async
+  onAdd: (wasteType: any) => Promise<void>;
 }
 
 export function AddWasteTypeModal({ isOpen, onClose, onAdd }: AddWasteTypeModalProps) {
@@ -23,8 +21,6 @@ export function AddWasteTypeModal({ isOpen, onClose, onAdd }: AddWasteTypeModalP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validasi
     if (!formData.nama.trim() || !formData.harga_kg) {
       toast({
         variant: "destructive",
@@ -47,7 +43,6 @@ export function AddWasteTypeModal({ isOpen, onClose, onAdd }: AddWasteTypeModalP
     setIsSubmitting(true);
     
     try {
-      // Foto URL di-hardcode ke placeholder, tidak ada upload
       const newWasteType = {
         nama: formData.nama.trim(),
         harga_kg: hargaNum,
@@ -127,7 +122,6 @@ export function AddWasteTypeModal({ isOpen, onClose, onAdd }: AddWasteTypeModalP
 
             <div>
               <label className="block text-sm font-medium mb-2">Foto Sampah</label>
-              {/* Area upload dinonaktifkan, tidak bisa diklik */}
               <div 
                 className="border-2 border-dashed border-border rounded-lg p-6 text-center bg-muted/50 min-h-[150px] flex flex-col items-center justify-center opacity-50"
               >

@@ -322,7 +322,6 @@ export function RiwayatPage() {
                           <p className="font-medium">{item.nama_sampah}</p>
                           <p className="text-xs text-muted-foreground">{formatRupiah(Number(item.harga_kg) || 0)}/kg</p>
                         </td>
-                        {/* PERBAIKAN: Tambahkan kelas p-3 di sini */}
                         <td className="py-2 px-3 text-right">{(Number(item.berat_kg) || 0).toFixed(1)} kg</td>
                         <td className="py-2 px-3 text-right">{formatRupiah(Number(item.subtotal) || 0)}</td>
                       </tr>
@@ -331,7 +330,6 @@ export function RiwayatPage() {
                       <tr className="hover:bg-muted/50">
                         <td></td>
                         <td colSpan={2} className="py-2 pl-3 italic text-muted-foreground">Penarikan Saldo</td>
-                        {/* PERBAIKAN: Tambahkan kelas p-3 di sini */}
                         <td className="py-2 px-3 text-right text-destructive font-semibold">{formatRupiah(Number(trx.total_harga) || 0)}</td>
                       </tr>
                     )}

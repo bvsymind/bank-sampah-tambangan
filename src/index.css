@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Waste Bank Digital - Design System
-Mobile-first PWA with green and blue theme
-*/
 
 @layer base {
   :root {
@@ -51,7 +48,7 @@ Mobile-first PWA with green and blue theme
 
     --radius: 0.75rem;
 
-    /* Gradients for waste bank theme */
+    /* Gradients*/
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
     --gradient-card: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);

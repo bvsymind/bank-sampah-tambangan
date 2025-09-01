@@ -1,4 +1,3 @@
-// src/pages/HomePage.tsx
 import { useState } from "react";
 import { Header } from "@/components/Header";
 import { BottomNavigation } from "@/components/layout/BottomNavigation";
@@ -8,7 +7,6 @@ import { NasabahPage } from "@/components/nasabah/NasabahPage";
 import { SampahPage } from "@/components/sampah/SampahPage";
 import { TarikPage } from "@/components/tarik/TarikPage";
 
-// Page components mapping
 const pageComponents = {
   kasir: KasirPage,
   riwayat: RiwayatPage,
@@ -17,7 +15,6 @@ const pageComponents = {
   tarik: TarikPage,
 };
 
-// Page titles mapping
 const pageTitles = {
   kasir: "Kasir",
   riwayat: "Riwayat Transaksi", 

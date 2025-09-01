@@ -1,4 +1,3 @@
-// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { AuthService, Admin } from '../services/auth';
@@ -37,7 +36,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setCurrentUser(user);
       
       if (user) {
-        // Load admin data
         const admin = await AuthService.getAdminData(user.uid);
         setAdminData(admin);
       } else {

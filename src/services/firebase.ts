@@ -1,4 +1,3 @@
-// src/services/firebase.ts - Updated dengan Auth
 import { initializeApp } from 'firebase/app';
 import { 
   getFirestore, 
@@ -29,7 +28,7 @@ import {
   deleteObject 
 } from 'firebase/storage';
 
-// Firebase config
+
 const firebaseConfig = {
   apiKey:              import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain:          import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -39,21 +38,16 @@ const firebaseConfig = {
   appId:               import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
-// Connect to emulators in development
 if (import.meta.env.DEV) {
-  // Uncomment lines below if using Firebase emulators in development
-  // connectAuthEmulator(auth, 'http://localhost:9099');
-  // connectFirestoreEmulator(db, 'localhost', 8080);
-  // connectStorageEmulator(storage, 'localhost', 9199);
 }
 
-// Interfaces
+
 export interface Admin {
   uid: string;
   email: string;
@@ -101,7 +95,6 @@ export interface Transaksi {
   processed_by?: string;
 }
 
-// Helper functions - TAMBAHKAN INI
 export const formatRupiah = (amount: number): string => {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -128,9 +121,7 @@ export const formatDateOnly = (date: Date): string => {
   }).format(date);
 };
 
-// Admin Services
 export const adminService = {
-  // Get admin by UID
   async getByUid(uid: string): Promise<Admin | null> {
     try {
       const docSnap = await getDoc(doc(db, 'admins', uid));
@@ -150,7 +141,7 @@ export const adminService = {
     }
   },
 
-  // Get all admins
+
   async getAll(): Promise<Admin[]> {
     try {
       const querySnapshot = await getDocs(
@@ -170,7 +161,6 @@ export const adminService = {
 };
 
 export const nasabahService = {
-  // Get all nasabah
   async getAll(): Promise<Nasabah[]> {
     const querySnapshot = await getDocs(
       query(collection(db, 'nasabah'), orderBy('created_at', 'desc'))
@@ -183,7 +173,6 @@ export const nasabahService = {
     })) as Nasabah[];
   },
 
-  // Get nasabah by ID
   async getById(id: string): Promise<Nasabah | null> {
     const docSnap = await getDoc(doc(db, 'nasabah', id));
     if (docSnap.exists()) {
@@ -198,7 +187,6 @@ export const nasabahService = {
     return null;
   },
 
-  // Get nasabah by id_nasabah
   async getByIdNasabah(id_nasabah: string): Promise<Nasabah | null> {
     const q = query(collection(db, 'nasabah'), where('id_nasabah', '==', id_nasabah));
     const querySnapshot = await getDocs(q);
@@ -215,7 +203,6 @@ export const nasabahService = {
     return null;
   },
 
-  // Add new nasabah
   async add(nasabah: Omit<Nasabah, 'id' | 'created_at' | 'updated_at'>): Promise<string> {
     const docRef = await addDoc(collection(db, 'nasabah'), {
       ...nasabah,
@@ -225,7 +212,6 @@ export const nasabahService = {
     return docRef.id;
   },
 
-  // Update nasabah
   async update(id: string, nasabah: Partial<Nasabah>): Promise<void> {
     const docRef = doc(db, 'nasabah', id);
     await updateDoc(docRef, {
@@ -234,27 +220,21 @@ export const nasabahService = {
     });
   },
 
-  // --- FUNGSI DELETE DIPERBARUI UNTUK MENGHAPUS TRANSAKSI TERKAIT ---
   async delete(nasabahDocId: string, id_nasabah: string): Promise<void> {
     const batch = writeBatch(db);
 
-    // 1. Cari semua transaksi yang berhubungan dengan id_nasabah
     const transaksiQuery = query(collection(db, 'transaksi'), where('id_nasabah', '==', id_nasabah));
     const transaksiSnapshot = await getDocs(transaksiQuery);
 
-    // 2. Tambahkan operasi delete untuk setiap transaksi ke dalam batch
     transaksiSnapshot.forEach(doc => {
       batch.delete(doc.ref);
     });
 
-    // 3. Tambahkan operasi delete untuk dokumen nasabah itu sendiri
     const nasabahRef = doc(db, 'nasabah', nasabahDocId);
     batch.delete(nasabahRef);
 
-    // 4. Jalankan semua operasi secara atomik
     await batch.commit();
   },
-  // ... (fungsi updateSaldo tidak berubah)
   async updateSaldo(id: string, newSaldo: number): Promise<void> {
     const docRef = doc(db, 'nasabah', id);
     await updateDoc(docRef, {
@@ -264,9 +244,7 @@ export const nasabahService = {
   }
 };
 
-// Jenis Sampah Services
 export const jenisSampahService = {
-  // Get all active jenis sampah
   async getAll(): Promise<JenisSampah[]> {
     const q = query(
       collection(db, 'jenis_sampah'), 
@@ -282,7 +260,6 @@ export const jenisSampahService = {
     })) as JenisSampah[];
   },
 
-  // Add new jenis sampah
   async add(jenisSampah: Omit<JenisSampah, 'id' | 'created_at' | 'updated_at' | 'is_active'>): Promise<string> {
     const docRef = await addDoc(collection(db, 'jenis_sampah'), {
       ...jenisSampah,
@@ -293,7 +270,6 @@ export const jenisSampahService = {
     return docRef.id;
   },
 
-  // Update jenis sampah
   async update(id: string, jenisSampah: Partial<JenisSampah>): Promise<void> {
     const docRef = doc(db, 'jenis_sampah', id);
     await updateDoc(docRef, {
@@ -302,7 +278,6 @@ export const jenisSampahService = {
     });
   },
 
-  // Soft delete jenis sampah
   async delete(id: string): Promise<void> {
     const docRef = doc(db, 'jenis_sampah', id);
     await updateDoc(docRef, {
@@ -312,94 +287,7 @@ export const jenisSampahService = {
   }
 };
 
-// Transaksi Services (updated to include processed_by)
-// export const transaksiService = {
-//   // Get all transaksi
-//   async getAll(startDate?: Date, endDate?: Date, id_nasabah?: string): Promise<Transaksi[]> {
-//     let q = query(collection(db, 'transaksi'), orderBy('timestamp', 'desc'));
-    
-//     if (startDate && endDate) {
-//       q = query(q, 
-//         where('timestamp', '>=', Timestamp.fromDate(startDate)),
-//         where('timestamp', '<=', Timestamp.fromDate(endDate))
-//       );
-//     }
-    
-//     if (id_nasabah) {
-//       q = query(q, where('id_nasabah', '==', id_nasabah));
-//     }
-
-//     const querySnapshot = await getDocs(q);
-//     return querySnapshot.docs.map(doc => ({
-//       id: doc.id,
-//       ...doc.data(),
-//       timestamp: doc.data().timestamp.toDate(),
-//       created_at: doc.data().created_at.toDate()
-//     })) as Transaksi[];
-//   },
-
-//   // Add new transaksi (setor)
-//   async addSetor(transaksi: Omit<Transaksi, 'id' | 'created_at'>, processedBy?: string): Promise<string> {
-//     const batch = writeBatch(db);
-    
-//     // Add transaction
-//     const transaksiRef = doc(collection(db, 'transaksi'));
-//     batch.set(transaksiRef, {
-//       ...transaksi,
-//       timestamp: Timestamp.fromDate(transaksi.timestamp),
-//       processed_by: processedBy,
-//       created_at: Timestamp.now()
-//     });
-
-//     // Update nasabah saldo
-//     const nasabah = await nasabahService.getByIdNasabah(transaksi.id_nasabah);
-//     if (nasabah && nasabah.id) {
-//       const nasabahRef = doc(db, 'nasabah', nasabah.id);
-//       batch.update(nasabahRef, {
-//         saldo: nasabah.saldo + transaksi.total_harga,
-//         updated_at: Timestamp.now()
-//       });
-//     }
-
-//     await batch.commit();
-//     return transaksiRef.id;
-//   },
-
-//   // Add new transaksi (tarik)
-//   async addTarik(id_nasabah: string, nama_nasabah: string, amount: number, processedBy?: string): Promise<string> {
-//     const batch = writeBatch(db);
-    
-//     // Add transaction
-//     const transaksiRef = doc(collection(db, 'transaksi'));
-//     batch.set(transaksiRef, {
-//       id_nasabah,
-//       nama_nasabah,
-//       timestamp: Timestamp.now(),
-//       tipe: 'tarik',
-//       total_harga: -amount,
-//       total_berat_kg: 0,
-//       items: [],
-//       processed_by: processedBy,
-//       created_at: Timestamp.now()
-//     });
-
-//     // Update nasabah saldo
-//     const nasabah = await nasabahService.getByIdNasabah(id_nasabah);
-//     if (nasabah && nasabah.id) {
-//       const nasabahRef = doc(db, 'nasabah', nasabah.id);
-//       batch.update(nasabahRef, {
-//         saldo: nasabah.saldo - amount,
-//         updated_at: Timestamp.now()
-//       });
-//     }
-
-//     await batch.commit();
-//     return transaksiRef.id;
-//   }
-// };
 export const transaksiService = {
-  // ... (fungsi getAll tidak berubah)
-  // Get all transaksi
   async getAll(startDate?: Date, endDate?: Date, id_nasabah?: string): Promise<Transaksi[]> {
     let q = query(collection(db, 'transaksi'), orderBy('timestamp', 'asc'));
     
@@ -423,7 +311,6 @@ export const transaksiService = {
     })) as Transaksi[];
   },
 
-  // Add new transaksi (setor)
   async addSetor(transaksi: Omit<Transaksi, 'id' | 'created_at'>, processedBy?: string): Promise<string> {
     const batch = writeBatch(db);
     
@@ -431,7 +318,6 @@ export const transaksiService = {
     batch.set(transaksiRef, {
       ...transaksi,
       timestamp: Timestamp.fromDate(transaksi.timestamp),
-      // PERBAIKAN: Beri nilai null jika processedBy tidak ada (undefined)
       processed_by: processedBy || null, 
       created_at: Timestamp.now()
     });
@@ -449,7 +335,6 @@ export const transaksiService = {
     return transaksiRef.id;
   },
 
-  // Add new transaksi (tarik)
   async addTarik(id_nasabah: string, nama_nasabah: string, amount: number, processedBy?: string): Promise<string> {
     const batch = writeBatch(db);
     
@@ -462,7 +347,6 @@ export const transaksiService = {
       total_harga: -amount,
       total_berat_kg: 0,
       items: [],
-      // PERBAIKAN: Beri nilai null jika processedBy tidak ada (undefined)
       processed_by: processedBy || null,
       created_at: Timestamp.now()
     });
@@ -480,16 +364,13 @@ export const transaksiService = {
     return transaksiRef.id;
   }
 };
-// Storage Services for images
 export const storageService = {
-  // Upload image
   async uploadImage(file: File, path: string): Promise<string> {
     const imageRef = ref(storage, path);
     const snapshot = await uploadBytes(imageRef, file);
     return await getDownloadURL(snapshot.ref);
   },
 
-  // Delete image
   async deleteImage(url: string): Promise<void> {
     const imageRef = ref(storage, url);
     await deleteObject(imageRef);

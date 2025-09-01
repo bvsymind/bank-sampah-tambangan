@@ -1,4 +1,3 @@
-// src/pages/RegisterPage.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,8 +20,6 @@ export function RegisterPage() {
 
   const { register } = useAuth();
   const navigate = useNavigate();
-
-  // Password strength calculation
   const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
     let score = 0;
     if (password.length >= 6) score += 20;
@@ -39,8 +36,6 @@ export function RegisterPage() {
   };
 
   const passwordStrength = getPasswordStrength(password);
-
-  // Password requirements
   const requirements = [
     { test: password.length >= 6, label: 'Minimal 6 karakter' },
     { test: /[a-z]/.test(password), label: 'Huruf kecil (a-z)' },

@@ -75,14 +75,10 @@ export function KasirPage() {
           subtotal: item.subtotal
         }))
       };
-
-      // Dapatkan user yang sedang login
       const currentUser = auth.currentUser;
-      
-      // Kirim data transaksi DAN email admin yang memproses
       await transaksiService.addSetor(
         transaksiData, 
-        currentUser?.email || 'System' // Gunakan email user, atau 'System' jika tidak ada
+        currentUser?.email || 'System'
       );
 
       toast({

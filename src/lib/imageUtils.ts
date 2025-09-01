@@ -6,12 +6,8 @@ export const resizeImage = (file: File): Promise<string> => {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
-        // Set canvas size to 100x100
         canvas.width = 100;
         canvas.height = 100;
-        
-        // Draw image centered and scaled to fit
         const scale = Math.max(
           100 / img.width,
           100 / img.height

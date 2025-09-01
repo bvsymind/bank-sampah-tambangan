@@ -1,4 +1,3 @@
-// src/services/auth.ts
 import { 
   getAuth, 
   createUserWithEmailAndPassword, 
@@ -35,10 +34,8 @@ export interface AuthError {
 }
 
 export class AuthService {
-  // Register new admin
   static async register(email: string, password: string, confirmPassword: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Validasi input
       if (!email || !password || !confirmPassword) {
         return { success: false, error: 'Semua field harus diisi' };
       }
@@ -54,8 +51,6 @@ export class AuthService {
       if (password !== confirmPassword) {
         return { success: false, error: 'Password dan konfirmasi password tidak cocok' };
       }
-
-      // Cek apakah email sudah terdaftar di koleksi admins
       const adminQuery = query(
         collection(db, 'admins'), 
         where('email', '==', email.toLowerCase())
@@ -65,12 +60,8 @@ export class AuthService {
       if (!adminSnapshot.empty) {
         return { success: false, error: 'Email sudah digunakan' };
       }
-
-      // Buat user baru dengan Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Simpan data admin ke Firestore
       const adminData: Omit<Admin, 'created_at' | 'updated_at'> & { 
         created_at: any; 
         updated_at: any; 
@@ -92,8 +83,6 @@ export class AuthService {
       };
     }
   }
-
-  // Login admin
   static async login(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
       if (!email || !password) {
@@ -107,10 +96,9 @@ export class AuthService {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Verifikasi bahwa user adalah admin yang terdaftar
       const adminDoc = await getDoc(doc(db, 'admins', user.uid));
       if (!adminDoc.exists()) {
-        await signOut(auth); // Logout jika bukan admin
+        await signOut(auth);
         return { success: false, error: 'Akses tidak diizinkan' };
       }
 
@@ -124,7 +112,6 @@ export class AuthService {
     }
   }
 
-  // Logout admin
   static async logout(): Promise<{ success: boolean; error?: string }> {
     try {
       await signOut(auth);
@@ -138,7 +125,6 @@ export class AuthService {
     }
   }
 
-  // Send password reset email
   static async resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
     try {
       if (!email) {
@@ -160,17 +146,14 @@ export class AuthService {
     }
   }
 
-  // Get current user
   static getCurrentUser(): User | null {
     return auth.currentUser;
   }
 
-  // Check if user is authenticated
   static isAuthenticated(): boolean {
     return auth.currentUser !== null;
   }
 
-  // Get admin data
   static async getAdminData(uid: string): Promise<Admin | null> {
     try {
       const adminDoc = await getDoc(doc(db, 'admins', uid));
@@ -190,18 +173,15 @@ export class AuthService {
     }
   }
 
-  // Listen to auth state changes
   static onAuthStateChanged(callback: (user: User | null) => void) {
     return onAuthStateChanged(auth, callback);
   }
 
-  // Validate email format
   private static isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
 
-  // Get user-friendly error messages
   private static getErrorMessage(errorCode: string): string {
     switch (errorCode) {
       case 'auth/email-already-in-use':

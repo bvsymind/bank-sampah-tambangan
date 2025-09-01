@@ -23,7 +23,6 @@ export function TarikPage() {
     try {
       setLoading(true);
       const data = await nasabahService.getAll();
-      // Only show nasabah with positive balance
       setNasabahList(data.filter(n => n.saldo > 0));
     } catch (error) {
       console.error("Error loading nasabah:", error);
@@ -39,7 +38,6 @@ export function TarikPage() {
 
   const handleRefresh = async () => {
     await loadNasabah();
-    // Reset selection if current customer no longer has balance
     if (selectedCustomerId) {
       const currentCustomer = nasabahList.find(n => n.id_nasabah === selectedCustomerId);
       if (!currentCustomer || currentCustomer.saldo <= 0) {
@@ -97,8 +95,6 @@ export function TarikPage() {
         title: "Penarikan Berhasil",
         description: `Penarikan ${formatRupiah(amount)} untuk ${selectedCustomer.nama} berhasil diproses`
       });
-
-      // Reset form and refresh data
       setSelectedCustomerId("");
       setWithdrawAmount("");
       await loadNasabah();

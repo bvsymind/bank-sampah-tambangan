@@ -1,7 +1,5 @@
-// src/components/sampah/EditWasteTypeModal.tsx
-
 import { useState, useEffect } from "react";
-import { X, Image as ImageIcon } from "lucide-react"; // Menggunakan ikon yang berbeda
+import { X, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -11,7 +9,7 @@ import { type JenisSampah } from "@/services/firebase";
 export interface EditWasteTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (updatedData: Partial<JenisSampah>) => Promise<void>; // Disesuaikan
+  onUpdate: (updatedData: Partial<JenisSampah>) => Promise<void>;
   wasteType: JenisSampah | null;
 }
 
@@ -50,7 +48,6 @@ export function EditWasteTypeModal({
 
     setIsSubmitting(true);
     try {
-      // Hanya update nama dan harga, foto_url tidak diubah
       const updatedData: Partial<JenisSampah> = {
         nama: formData.nama.trim(),
         harga_kg: hargaNum,

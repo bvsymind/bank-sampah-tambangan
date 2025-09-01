@@ -8,7 +8,6 @@ import { jenisSampahService, type JenisSampah, formatRupiah } from "@/services/f
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-// Impor komponen AlertDialog yang dibutuhkan
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +20,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Fixed DraggableFloatingActionButton component
 function DraggableFloatingActionButton({ 
   onClick, 
   children 
@@ -488,7 +486,6 @@ export function SampahPage() {
           </div>
         )}
 
-        {/* Draggable Floating Action Button */}
         <DraggableFloatingActionButton
           onClick={() => setShowAddModal(true)}
         >
