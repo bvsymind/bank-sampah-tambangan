@@ -7,6 +7,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { nasabahService, transaksiService, type Nasabah, formatRupiah } from "@/services/firebase";
 import { useToast } from "@/hooks/use-toast";
 
+const CustomerDisplay = ({ nasabah }: { nasabah: Nasabah | undefined }) => {
+  if (!nasabah) {
+    return <span className="text-muted-foreground">Cari dan pilih nasabah...</span>;
+  }
+
+  return (
+    <div className="flex items-center justify-between w-full overflow-hidden">
+      <div className="flex-1 min-w-0">
+        <p className="font-medium truncate">{nasabah.nama}</p>
+        <p className="text-xs text-muted-foreground truncate">ID: {nasabah.id_nasabah}</p>
+      </div>
+      <span className="text-sm font-semibold text-primary ml-4 flex-shrink-0">
+        {formatRupiah(nasabah.saldo)}
+      </span>
+    </div>
+  );
+};
+
 export function TarikPage() {
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -38,12 +56,10 @@ export function TarikPage() {
 
   const handleRefresh = async () => {
     await loadNasabah();
-    if (selectedCustomerId) {
-      const currentCustomer = nasabahList.find(n => n.id_nasabah === selectedCustomerId);
-      if (!currentCustomer || currentCustomer.saldo <= 0) {
+    const currentCustomerExists = nasabahList.some(n => n.id_nasabah === selectedCustomerId);
+    if (selectedCustomerId && !currentCustomerExists) {
         setSelectedCustomerId("");
         setWithdrawAmount("");
-      }
     }
     toast({
       title: "Data Diperbarui",
@@ -55,42 +71,26 @@ export function TarikPage() {
 
   const handleWithdraw = async () => {
     if (!selectedCustomer) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Silakan pilih nasabah terlebih dahulu"
-      });
+      toast({ variant: "destructive", title: "Error", description: "Silakan pilih nasabah terlebih dahulu" });
       return;
     }
-
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Jumlah penarikan harus berupa angka positif"
-      });
+      toast({ variant: "destructive", title: "Error", description: "Jumlah penarikan harus berupa angka positif" });
       return;
     }
-
     if (amount > selectedCustomer.saldo) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Jumlah penarikan melebihi saldo yang tersedia"
-      });
+      toast({ variant: "destructive", title: "Error", description: "Jumlah penarikan melebihi saldo yang tersedia" });
       return;
     }
 
     setProcessing(true);
-    
     try {
       await transaksiService.addTarik(
         selectedCustomer.id_nasabah,
         selectedCustomer.nama,
         amount
       );
-
       toast({
         title: "Penarikan Berhasil",
         description: `Penarikan ${formatRupiah(amount)} untuk ${selectedCustomer.nama} berhasil diproses`
@@ -98,7 +98,6 @@ export function TarikPage() {
       setSelectedCustomerId("");
       setWithdrawAmount("");
       await loadNasabah();
-      
     } catch (error) {
       console.error("Error processing withdrawal:", error);
       toast({
@@ -112,32 +111,6 @@ export function TarikPage() {
   };
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 pb-20">
-        <div className="py-6 space-y-6">
-          <Card className="p-6 animate-pulse">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-muted rounded-lg"></div>
-              <div className="space-y-2">
-                <div className="h-6 bg-muted rounded w-32"></div>
-                <div className="h-4 bg-muted rounded w-48"></div>
-              </div>
-            </div>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <div className="h-4 bg-muted rounded w-24"></div>
-                <div className="h-10 bg-muted rounded"></div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-4 bg-muted rounded w-32"></div>
-                <div className="h-10 bg-muted rounded"></div>
-              </div>
-              <div className="h-12 bg-muted rounded"></div>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -146,24 +119,15 @@ export function TarikPage() {
         <Card className="p-6 bg-gradient-card border-0 shadow-card">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center">
+              <div className="flex-shrink-0 w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center">
                 <CreditCard className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-foreground">
-                  Penarikan Saldo
-                </h2>
-                <p className="text-muted-foreground">
-                  Proses penarikan dana nasabah
-                </p>
+                <h2 className="text-xl font-semibold text-foreground">Penarikan Saldo</h2>
+                <p className="text-muted-foreground">Proses penarikan dana nasabah</p>
               </div>
             </div>
-            <Button 
-              onClick={handleRefresh} 
-              variant="outline"
-              size="sm"
-              disabled={processing}
-            >
+            <Button onClick={handleRefresh} variant="outline" size="sm" disabled={processing}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -171,38 +135,20 @@ export function TarikPage() {
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Pilih Nasabah
-              </label>
+              <label className="block text-sm font-medium mb-2">Pilih Nasabah</label>
               {nasabahList.length === 0 ? (
                 <Card className="p-4 bg-muted/50 border-dashed">
-                  <p className="text-center text-muted-foreground">
-                    Tidak ada nasabah dengan saldo yang bisa ditarik
-                  </p>
+                  <p className="text-center text-muted-foreground">Tidak ada nasabah dengan saldo yang bisa ditarik</p>
                 </Card>
               ) : (
-                <Select 
-                  value={selectedCustomerId} 
-                  onValueChange={setSelectedCustomerId}
-                  disabled={processing}
-                >
-                  <SelectTrigger className="bg-input">
-                    <SelectValue placeholder="Cari dan pilih nasabah..." />
+                <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId} disabled={processing}>
+                  <SelectTrigger className="bg-input h-auto">
+                    <CustomerDisplay nasabah={selectedCustomer} />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover">
+                  <SelectContent className="bg-popover" position="popper">
                     {nasabahList.map(nasabah => (
                       <SelectItem key={nasabah.id_nasabah} value={nasabah.id_nasabah}>
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <span className="font-medium">{nasabah.nama}</span>
-                            <span className="text-sm text-muted-foreground ml-2">
-                              ID: {nasabah.id_nasabah}
-                            </span>
-                          </div>
-                          <span className="text-sm font-semibold text-primary ml-4">
-                            {formatRupiah(nasabah.saldo)}
-                          </span>
-                        </div>
+                        <CustomerDisplay nasabah={nasabah} />
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -212,13 +158,11 @@ export function TarikPage() {
 
             {selectedCustomer && (
               <Card className="p-4 bg-primary/5 border-primary/20">
-                <h4 className="font-semibold text-foreground mb-2">
-                  Informasi Nasabah
-                </h4>
+                <h4 className="font-semibold text-foreground mb-2">Informasi Nasabah</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Nama:</span>
-                    <span className="font-medium">{selectedCustomer.nama}</span>
+                    <span className="font-medium text-right">{selectedCustomer.nama}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">ID Nasabah:</span>
@@ -226,24 +170,18 @@ export function TarikPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Alamat:</span>
-                    <span className="font-medium text-right max-w-48 truncate">
-                      {selectedCustomer.alamat}
-                    </span>
+                    <span className="font-medium text-right max-w-[50%] truncate">{selectedCustomer.alamat}</span>
                   </div>
                   <div className="flex justify-between border-t pt-2">
                     <span className="text-muted-foreground">Saldo Saat Ini:</span>
-                    <span className="font-bold text-primary text-lg">
-                      {formatRupiah(selectedCustomer.saldo)}
-                    </span>
+                    <span className="font-bold text-primary text-lg">{formatRupiah(selectedCustomer.saldo)}</span>
                   </div>
                 </div>
               </Card>
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Jumlah Penarikan (Rp)
-              </label>
+              <label className="block text-sm font-medium mb-2">Jumlah Penarikan (Rp)</label>
               <Input
                 type="number"
                 placeholder="0"
@@ -254,15 +192,12 @@ export function TarikPage() {
                 step="1000"
                 disabled={!selectedCustomer || processing}
               />
-              
               {selectedCustomer && withdrawAmount && (
                 <div className="mt-2">
                   {parseFloat(withdrawAmount) > selectedCustomer.saldo ? (
                     <div className="flex items-center gap-2 text-destructive">
                       <AlertCircle className="h-4 w-4" />
-                      <span className="text-sm">
-                        Jumlah melebihi saldo yang tersedia
-                      </span>
+                      <span className="text-sm">Jumlah melebihi saldo yang tersedia</span>
                     </div>
                   ) : parseFloat(withdrawAmount) > 0 ? (
                     <p className="text-sm text-muted-foreground">
@@ -271,7 +206,6 @@ export function TarikPage() {
                   ) : null}
                 </div>
               )}
-
               {selectedCustomer && (
                 <div className="mt-3 flex gap-2">
                   {[25000, 50000, 100000].map(amount => (
@@ -289,7 +223,6 @@ export function TarikPage() {
                 </div>
               )}
             </div>
-
             <Button
               onClick={handleWithdraw}
               disabled={
@@ -306,9 +239,7 @@ export function TarikPage() {
                   <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2" />
                   Memproses...
                 </>
-              ) : (
-                "Proses Penarikan"
-              )}
+              ) : "Proses Penarikan"}
             </Button>
           </div>
         </Card>
@@ -316,3 +247,4 @@ export function TarikPage() {
     </div>
   );
 }
+

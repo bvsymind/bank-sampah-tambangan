@@ -447,7 +447,7 @@ export function SampahPage() {
                       variant="outline"
                       size="icon"
                       onClick={() => handleEdit(wasteType)}
-                      className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                      className="h-8 w-8 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>

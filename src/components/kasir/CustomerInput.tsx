@@ -1,149 +1,173 @@
-import { useState, useEffect } from "react";
-import { Search, QrCode, CheckCircle, XCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, QrCode, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { nasabahService, type Nasabah, formatRupiah } from "@/services/firebase";
-import { cn } from "@/lib/utils";
 import { QRScannerModal } from "./QRScannerModal";
 import { useToast } from "@/hooks/use-toast";
 
 interface CustomerInputProps {
-
-  value: string;
-  onChange: (value: string) => void;
   onCustomerSelect: (customer: Nasabah | null) => void;
   selectedCustomer: Nasabah | null;
 }
 
-export function CustomerInput({ value: customerId, onChange, onCustomerSelect, selectedCustomer }: CustomerInputProps) {
-  const [isChecking, setIsChecking] = useState(false);
+export function CustomerInput({ onCustomerSelect, selectedCustomer }: CustomerInputProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Nasabah[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
-  const [hasChecked, setHasChecked] = useState(false);
   const { toast } = useToast();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!customerId) {
-      setHasChecked(false);
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      setIsDropdownOpen(false);
+      return;
     }
-  }, [customerId]);
+    
+    if (selectedCustomer && searchQuery === selectedCustomer.nama) {
+        return;
+    }
 
-  const handleQRScan = async (scannedId: string) => {
-    onChange(scannedId);
-    setTimeout(async () => {
+
+    const handler = setTimeout(async () => {
+      setIsSearching(true);
       try {
-        setIsChecking(true);
-        const customer = await nasabahService.getByIdNasabah(scannedId.trim());
-        onCustomerSelect(customer);
-        setHasChecked(true);
+        const results = await nasabahService.searchNasabah(searchQuery);
+        setSearchResults(results);
+        setIsDropdownOpen(true);
       } catch (error) {
-        toast({ variant: "destructive", title: "Error", description: "Gagal mencari nasabah" });
-        onCustomerSelect(null);
-      } finally {
-        setIsChecking(false);
-      }
-    }, 100);
-  };
-
-  const handleCheckCustomer = async () => {
-    if (!customerId.trim()) return;
-    
-    setIsChecking(true);
-    
-    try {
-      const customer = await nasabahService.getByIdNasabah(customerId.trim());
-      onCustomerSelect(customer);
-      setHasChecked(true);
-      
-      if (!customer) {
         toast({
           variant: "destructive",
-          title: "Nasabah Tidak Ditemukan",
-          description: "ID Nasabah tidak terdaftar dalam sistem"
+          title: "Error",
+          description: "Gagal melakukan pencarian nasabah.",
         });
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300); // Tunda pencarian selama 300ms
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery, selectedCustomer, toast]);
+
+  // Effect untuk menutup dropdown saat klik di luar komponen
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    if (!query) {
+      onCustomerSelect(null);
+    }
+  };
+
+  const handleSelectCustomer = (customer: Nasabah) => {
+    onCustomerSelect(customer);
+    setSearchQuery(customer.nama);
+    setIsDropdownOpen(false);
+    setSearchResults([]);
+  };
+  
+  const handleQRScan = async (scannedId: string) => {
+    setIsSearching(true);
+    try {
+      const customer = await nasabahService.getByIdNasabah(scannedId.trim());
+      if (customer) {
+        handleSelectCustomer(customer);
+      } else {
+        toast({ variant: "destructive", title: "Error", description: "Nasabah dari QR Code tidak ditemukan." });
+        onCustomerSelect(null);
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Gagal mencari nasabah. Periksa koneksi internet."
-      });
+      toast({ variant: "destructive", title: "Error", description: "Gagal mencari nasabah" });
       onCustomerSelect(null);
     } finally {
-      setIsChecking(false);
+      setIsSearching(false);
     }
   };
 
-  const handleInputChange = (inputValue: string) => {
-    onChange(inputValue);
-    setHasChecked(false);
-    if (selectedCustomer) {
-      onCustomerSelect(null);
+  useEffect(() => {
+    if (!selectedCustomer) {
+      setSearchQuery("");
     }
-  };
+  }, [selectedCustomer]);
+
 
   return (
-    <Card className="p-4 mb-6 bg-gradient-card border-0 shadow-card">
-      <h3 className="font-semibold text-foreground mb-3">Data Nasabah</h3>
+    <Card className="p-4 mb-6 bg-gradient-card border-0 shadow-card" ref={containerRef}>
+      <h3 className="font-semibold text-foreground mb-3">Cari Nasabah</h3>
       
       <div className="space-y-3">
-        <div className="flex gap-2">
-          <div className="flex-1">
+        <div className="flex gap-2 relative">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Masukkan ID Nasabah"
-              value={customerId}
-              onChange={(e) => handleInputChange(e.target.value)}
-              className="bg-input border-border"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') handleCheckCustomer();
-              }}
+              placeholder="Ketik ID atau Nama Nasabah..."
+              value={searchQuery}
+              onChange={handleInputChange}
+              onFocus={() => searchQuery.length > 1 && setIsDropdownOpen(true)}
+              className="bg-input border-border pl-9"
             />
+            {isSearching && <Loader2 className="animate-spin h-4 w-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />}
+            
+            {isDropdownOpen && (searchQuery.length > 1) && (
+              <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg z-10 shadow-lg max-h-60 overflow-y-auto">
+                {searchResults.length > 0 ? (
+                  <ul>
+                    {searchResults.map(customer => (
+                      <li
+                        key={customer.id}
+                        onClick={() => handleSelectCustomer(customer)}
+                        className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-b-0"
+                      >
+                        <p className="font-medium text-foreground">{customer.nama}</p>
+                        <p className="text-sm text-muted-foreground">ID: {customer.id_nasabah}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : !isSearching && (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    Nasabah tidak ditemukan.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+
           <Button
             variant="outline"
             size="icon"
-            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground flex-shrink-0"
             onClick={() => setShowQRScanner(true)}
           >
             <QrCode className="h-4 w-4" />
           </Button>
-          <Button
-            onClick={handleCheckCustomer}
-            disabled={!customerId.trim() || isChecking}
-            className="bg-primary hover:bg-primary-glow"
-          >
-            {isChecking ? (
-              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-            ) : (
-              <><Search className="h-4 w-4 mr-2" />Cek</>
-            )}
-          </Button>
         </div>
 
-        {/* Customer Status: Hanya tampil jika sudah dicek */}
-        {hasChecked && !isChecking && (
-          <div className={cn(
-            "flex items-center gap-2 p-3 rounded-lg border",
-            selectedCustomer 
-              ? "bg-success/10 border-success text-success-foreground" 
-              : "bg-destructive/10 border-destructive text-destructive-foreground"
-          )}>
-            {selectedCustomer ? (
-              <>
-                <CheckCircle className="h-5 w-5 text-success" />
-                <div>
-                  <p className="font-medium text-success">{selectedCustomer.nama}</p>
-                  <p className="text-sm text-success/80">
-                    ID: {selectedCustomer.id_nasabah} • Saldo: {formatRupiah(selectedCustomer.saldo)}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <XCircle className="h-5 w-5 text-destructive" />
-                <p className="font-medium text-destructive">ID Nasabah tidak ditemukan</p>
-              </>
-            )}
+        {selectedCustomer && (
+          <div className="flex items-start gap-3 p-3 rounded-lg border bg-success/10 border-success text-success-foreground">
+            <CheckCircle className="h-5 w-5 text-success mt-1 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-success">{selectedCustomer.nama}</p>
+              <p className="text-sm text-success/80">
+                ID: {selectedCustomer.id_nasabah} • Saldo: {formatRupiah(selectedCustomer.saldo)}
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -156,3 +180,4 @@ export function CustomerInput({ value: customerId, onChange, onCustomerSelect, s
     </Card>
   );
 }
+

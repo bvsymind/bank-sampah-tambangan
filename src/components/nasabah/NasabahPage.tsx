@@ -268,6 +268,7 @@ export function NasabahPage() {
 
 
   if (loading) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -296,26 +297,29 @@ export function NasabahPage() {
               <Card key={nasabah.id} className="p-4 bg-gradient-card border-0 shadow-card">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold">
                         <span>{nasabah.nama.charAt(0).toUpperCase()}</span>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground break-words">{nasabah.nama}</h3>
-                        <p className="text-sm text-muted-foreground">ID: {nasabah.id_nasabah}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="mb-2">
+                          <h3 className="font-semibold text-foreground break-words">{nasabah.nama}</h3>
+                          <p className="text-sm text-muted-foreground">ID: {nasabah.id_nasabah}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-muted-foreground break-words">{nasabah.alamat}</p>
+                          <div className="flex justify-between text-sm">
+                            <span>Saldo:</span>
+                            <span className="font-semibold text-primary">{formatRupiah(nasabah.saldo)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Bergabung:</span>
+                            <span>{new Date(nasabah.created_at).toLocaleDateString('id-ID')}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="pl-12 space-y-1">
-                      <p className="text-sm text-muted-foreground break-words">{nasabah.alamat}</p>
-                      <div className="flex justify-between text-sm">
-                        <span>Saldo:</span>
-                        <span className="font-semibold text-primary">{formatRupiah(nasabah.saldo)}</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Bergabung:</span>
-                        <span>{new Date(nasabah.created_at).toLocaleDateString('id-ID')}</span>
-                      </div>
-                    </div>
+
                   </div>
                   <div className="flex flex-col gap-2 ml-4">
                     <Button

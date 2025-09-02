@@ -8,6 +8,7 @@ import { HomePage } from './pages/HomePage';
 import { NasabahPage } from './components/nasabah/NasabahPage';
 import { SampahPage } from './components/sampah/SampahPage';
 import { TarikPage } from './components/tarik/TarikPage';
+import { InfoPage } from './pages/InfoPage';
 import { Toaster } from '@/components/ui/toaster';
 
 function App() {
@@ -41,6 +42,13 @@ function App() {
                 <TarikPage />
               </ProtectedRoute>
             } />
+
+            <Route path="/info" element={
+              <ProtectedRoute>
+                <InfoPage />
+              </ProtectedRoute>
+            } />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           

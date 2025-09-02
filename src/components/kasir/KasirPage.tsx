@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 
 export function KasirPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Nasabah | null>(null);
-  const [customerId, setCustomerId] = useState("");
   const [selectedWasteType, setSelectedWasteType] = useState<JenisSampah | null>(null);
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [transactionItems, setTransactionItems] = useState<TransactionItem[]>([]);
@@ -30,18 +29,38 @@ export function KasirPage() {
   
   const handleAddItem = (weight: number, subtotal: number) => {
     if (!selectedWasteType) return;
-    const newItem: TransactionItem = {
-      id: Date.now().toString(), 
-      nama_sampah: selectedWasteType.nama,
-      berat_kg: weight,
-      harga_kg: selectedWasteType.harga_kg,
-      subtotal: subtotal
-    };
-    setTransactionItems(prev => [...prev, newItem]);
-    toast({
-      title: "Item Ditambahkan",
-      description: `${selectedWasteType.nama} ${weight}kg berhasil ditambahkan`
-    });
+    const existingItem = transactionItems.find(item => item.id === selectedWasteType.id);
+
+    if (existingItem) {
+      setTransactionItems(
+        transactionItems.map(item =>
+          item.id === selectedWasteType.id
+            ? {
+                ...item,
+                berat_kg: item.berat_kg + weight,
+                subtotal: item.subtotal + subtotal,
+              }
+            : item
+        )
+      );
+      toast({
+        title: "Item Diperbarui",
+        description: `${selectedWasteType.nama} ditambahkan ${weight}kg. Total sekarang: ${existingItem.berat_kg + weight}kg`
+      });
+    } else {
+      const newItem: TransactionItem = {
+        id: selectedWasteType.id, 
+        nama_sampah: selectedWasteType.nama,
+        berat_kg: weight,
+        harga_kg: selectedWasteType.harga_kg,
+        subtotal: subtotal
+      };
+      setTransactionItems(prev => [...prev, newItem]);
+      toast({
+        title: "Item Ditambahkan",
+        description: `${selectedWasteType.nama} ${weight}kg berhasil ditambahkan`
+      });
+    }
   };
 
   const handleRemoveItem = (itemId: string) => {
@@ -51,6 +70,11 @@ export function KasirPage() {
       description: "Item berhasil dihapus dari transaksi"
     });
   };
+
+  const handleCustomerChange = (customer: Nasabah | null) => {
+    setTransactionItems([]);
+    setSelectedCustomer(customer);
+  }
 
   const handleSaveTransaction = async () => {
     if (!selectedCustomer || transactionItems.length === 0) return;
@@ -86,9 +110,9 @@ export function KasirPage() {
         description: `Transaksi untuk ${selectedCustomer.nama} berhasil disimpan`
       });
 
+      // Reset state setelah transaksi berhasil
       setSelectedCustomer(null);
       setTransactionItems([]);
-      setCustomerId(""); 
       
     } catch (error) {
       console.error("Error saving transaction:", error);
@@ -106,9 +130,7 @@ export function KasirPage() {
     <div className="container mx-auto px-4 pb-20">
       <div className="py-6 space-y-6">
         <CustomerInput
-          value={customerId}
-          onChange={setCustomerId}
-          onCustomerSelect={setSelectedCustomer}
+          onCustomerSelect={handleCustomerChange}
           selectedCustomer={selectedCustomer}
         />
 
@@ -135,3 +157,4 @@ export function KasirPage() {
     </div>
   );
 }
+

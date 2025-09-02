@@ -1,5 +1,4 @@
-// src/components/Header.tsx
-import { Recycle, Bell, User, LogOut } from "lucide-react";
+import { Recycle, Bell, User, LogOut, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
@@ -28,7 +27,10 @@ export function Header({ title }: HeaderProps) {
       console.error('Logout failed:', result.error);
     }
   };
-
+  
+  const handleInfoClick = () => {
+    navigate('/info');
+  };
   return (
     <header className="sticky top-0 z-50 bg-gradient-hero shadow-soft">
       <div className="container mx-auto px-4 py-4">
@@ -52,8 +54,9 @@ export function Header({ title }: HeaderProps) {
               size="sm" 
               variant="ghost"
               className="text-white hover:bg-white/20 p-2"
+              onClick={handleInfoClick}
             >
-              <Bell className="h-5 w-5" />
+              <Info className="h-5 w-5" />
             </Button>
             
             <DropdownMenu>
