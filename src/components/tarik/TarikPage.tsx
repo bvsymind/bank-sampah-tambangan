@@ -4,6 +4,16 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { nasabahService, transaksiService, type Nasabah, formatRupiah } from "@/services/firebase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,6 +41,7 @@ export function TarikPage() {
   const [nasabahList, setNasabahList] = useState<Nasabah[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,7 +80,7 @@ export function TarikPage() {
 
   const selectedCustomer = nasabahList.find(n => n.id_nasabah === selectedCustomerId);
 
-  const handleWithdraw = async () => {
+  const handleWithdrawConfirmation = () => {
     if (!selectedCustomer) {
       toast({ variant: "destructive", title: "Error", description: "Silakan pilih nasabah terlebih dahulu" });
       return;
@@ -83,8 +94,17 @@ export function TarikPage() {
       toast({ variant: "destructive", title: "Error", description: "Jumlah penarikan melebihi saldo yang tersedia" });
       return;
     }
+    
+    setShowConfirmDialog(true);
+  };
 
+  const handleConfirmedWithdraw = async () => {
+    if (!selectedCustomer) return;
+    
+    const amount = parseFloat(withdrawAmount);
     setProcessing(true);
+    setShowConfirmDialog(false);
+    
     try {
       await transaksiService.addTarik(
         selectedCustomer.id_nasabah,
@@ -224,7 +244,7 @@ export function TarikPage() {
               )}
             </div>
             <Button
-              onClick={handleWithdraw}
+              onClick={handleWithdrawConfirmation}
               disabled={
                 !selectedCustomer || 
                 !withdrawAmount || 
@@ -244,6 +264,25 @@ export function TarikPage() {
           </div>
         </Card>
       </div>
+      
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Anda akan melakukan penarikan sebesar <span className="font-bold">{formatRupiah(parseFloat(withdrawAmount))}</span> untuk nasabah <span className="font-bold">{selectedCustomer?.nama}</span>.
+              <br /><br />
+              Saldo setelah penarikan akan menjadi <span className="font-bold">{selectedCustomer && formatRupiah(selectedCustomer.saldo - parseFloat(withdrawAmount))}</span>.
+              <br /><br />
+              Tindakan ini tidak dapat dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmedWithdraw}>Konfirmasi Penarikan</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
