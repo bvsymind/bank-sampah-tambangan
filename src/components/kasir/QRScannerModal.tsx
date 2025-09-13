@@ -133,7 +133,7 @@ export function QRScannerModal({ isOpen, onClose, onScan }: QRScannerModalProps)
                 ref={videoRef}
                 className={`w-full h-full object-cover rounded-lg ${!isCameraReady ? 'hidden' : ''}`}
               />
-              {/* Overlay dan Indikator UI */}
+
               {!isCameraReady && !error && (
                 <div className="text-center">
                   <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>

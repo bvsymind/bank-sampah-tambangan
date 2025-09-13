@@ -55,7 +55,7 @@ export function CustomerInput({ onCustomerSelect, selectedCustomer }: CustomerIn
     };
   }, [searchQuery, selectedCustomer, toast]);
 
-  // Effect untuk menutup dropdown saat klik di luar komponen
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {

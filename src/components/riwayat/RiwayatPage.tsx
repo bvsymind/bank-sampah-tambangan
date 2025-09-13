@@ -4,9 +4,19 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { transaksiService, nasabahService, type Transaksi, type Nasabah, formatRupiah, formatDateOnly } from "@/services/firebase";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
+
+import { generatePassbookPDF } from "@/lib/generatePassbookPDF";
+
 
 export function RiwayatPage() {
   const [selectedCustomer, setSelectedCustomer] = useState("all");
@@ -92,7 +102,7 @@ export function RiwayatPage() {
     return { totalSetoran, totalSaldo };
   }, [filteredTransactionsForDisplay]);
 
-  const handleExport = () => {
+  const handleExportExcel = () => {
     if (filteredTransactionsForDisplay.length === 0) {
       toast({
         variant: "destructive",
@@ -183,17 +193,47 @@ export function RiwayatPage() {
     }
   };
 
+  const handleExportPdf = () => {
+    if (selectedCustomer === "all") {
+      toast({
+        variant: "destructive",
+        title: "Pilih Nasabah",
+        description: "Silakan pilih satu nasabah spesifik untuk mencetak buku tabungan.",
+      });
+      return;
+    }
+    
+    const nasabah = nasabahList.find(n => n.id_nasabah === selectedCustomer);
+    if (!nasabah) {
+      toast({ variant: "destructive", title: "Error", description: "Data nasabah tidak ditemukan." });
+      return;
+    }
+
+    const transactionsForExport = [...filteredTransactionsForDisplay].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    
+    setIsExporting(true);
+    try {
+      generatePassbookPDF(nasabah, transactionsForExport);
+      toast({ title: "Export Berhasil", description: `Buku tabungan untuk ${nasabah.nama} telah diunduh.` });
+    } catch (error) {
+      console.error("Error exporting to PDF:", error);
+      toast({ variant: "destructive", title: "Export Gagal", description: "Terjadi kesalahan saat membuat file PDF." });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (loading) {
-    return <div className="container mx-auto px-4 pb-20"><div className="py-6">Memuat data...</div></div>;
+
   }
 
   return (
     <div className="container mx-auto px-4 pb-20">
       <div className="py-6 space-y-6">
-        <Card className="p-4 bg-gradient-card border-0 shadow-card">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold">Filter Transaksi</h3>
-            <Button 
+         <Card className="p-4 bg-gradient-card border-0 shadow-card">
+           <div className="flex justify-between items-center mb-4">
+             <h3 className="font-semibold">Filter Transaksi</h3>
+             <Button 
               onClick={handleRefresh} 
               disabled={refreshing || isExporting}
               variant="outline"
@@ -240,114 +280,97 @@ export function RiwayatPage() {
             </div>
           </div>
         </Card>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="p-4 bg-gradient-card border-0 shadow-card">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-success/20 rounded-lg flex items-center justify-center">
-                <Scale className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Setoran</p>
-                <p className="text-lg font-bold text-foreground">
-                  {summary.totalSetoran.toFixed(1)} kg
-                </p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4 bg-gradient-card border-0 shadow-card">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Nilai Transaksi</p>
-                <p className="text-lg font-bold text-primary">
-                  {formatRupiah(summary.totalSaldo)}
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
+        
 
         <div className="flex justify-end">
-          <Button 
-            onClick={handleExport}
-            disabled={isExporting || refreshing}
-            variant="outline" 
-            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-          >
-            <Download className={`h-4 w-4 mr-2 ${isExporting ? 'animate-spin' : ''}`} />
-            {isExporting ? 'Mengekspor...' : 'Export ke Excel'}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                disabled={isExporting || refreshing}
+                variant="outline" 
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <Download className={`h-4 w-4 mr-2 ${isExporting ? 'animate-spin' : ''}`} />
+                {isExporting ? 'Mengekspor...' : 'Export Laporan'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={handleExportExcel}>
+                Export ke Excel (.xlsx)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPdf}>
+                Cetak Buku Tabungan (.pdf)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <Card className="border-0 shadow-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b bg-muted/50">
-                <tr>
-                  <th className="text-left p-3 font-semibold w-1/4">Tanggal & Nasabah</th>
-                  <th className="text-left p-3 font-semibold w-2/4">Rincian Sampah</th>
-                  <th className="text-right p-3 font-semibold w-1/4">Berat</th>
-                  <th className="text-right p-3 font-semibold w-1/4">Subtotal</th>
-                </tr>
-              </thead>
-              {filteredTransactionsForDisplay.length === 0 ? (
-                <tbody>
-                  <tr>
-                    <td colSpan={4} className="text-center py-8 text-muted-foreground">
-                      {transactions.length === 0 ? "Belum ada data transaksi" : "Tidak ada data yang sesuai dengan filter"}
-                    </td>
-                  </tr>
-                </tbody>
-              ) : (
-                filteredTransactionsForDisplay.map((trx) => (
-                  <tbody key={trx.id} className="border-b last:border-b-0">
-                    <tr className="bg-muted/30">
-                      <td className="p-3 font-semibold align-top">
-                        <div>
-                          <p>{formatDateOnly(trx.timestamp)}</p>
-                          <p className="text-xs text-muted-foreground font-normal">
-                            {trx.timestamp.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                      </td>
-                      <td colSpan={3} className="p-3 font-semibold align-top">{trx.nama_nasabah}</td>
-                    </tr>
-                    {trx.tipe === 'setor' && trx.items?.map((item, index) => (
-                      <tr key={index} className="hover:bg-muted/50">
-                        <td></td>
-                        <td className="py-2 pl-3">
-                          <p className="font-medium">{item.nama_sampah}</p>
-                          <p className="text-xs text-muted-foreground">{formatRupiah(Number(item.harga_kg) || 0)}/kg</p>
-                        </td>
-                        <td className="py-2 px-3 text-right">{(Number(item.berat_kg) || 0).toFixed(1)} kg</td>
-                        <td className="py-2 px-3 text-right">{formatRupiah(Number(item.subtotal) || 0)}</td>
-                      </tr>
-                    ))}
-                    {trx.tipe === 'tarik' && (
-                      <tr className="hover:bg-muted/50">
-                        <td></td>
-                        <td colSpan={2} className="py-2 pl-3 italic text-muted-foreground">Penarikan Saldo</td>
-                        <td className="py-2 px-3 text-right text-destructive font-semibold">{formatRupiah(Number(trx.total_harga) || 0)}</td>
-                      </tr>
-                    )}
-                    <tr className="bg-muted/30 font-semibold">
-                      <td colSpan={2} className="p-3 text-right">Total Transaksi</td>
-                      <td className="p-3 text-right">
-                        {trx.tipe === 'setor' ? `${(Number(trx.total_berat_kg) || 0).toFixed(1)} kg` : '-'}
-                      </td>
-                      <td className={`p-3 text-right ${trx.tipe === 'setor' ? 'text-success' : 'text-destructive'}`}>
-                        {formatRupiah(Number(trx.total_harga) || 0)}
-                      </td>
-                    </tr>
-                  </tbody>
-                ))
-              )}
-            </table>
-          </div>
-        </Card>
+         <Card className="border-0 shadow-card overflow-hidden">
+           <div className="overflow-x-auto">
+             <table className="w-full text-sm">
+               <thead className="border-b bg-muted/50">
+                 <tr>
+                   <th className="text-left p-3 font-semibold w-1/4">Tanggal & Nasabah</th>
+                   <th className="text-left p-3 font-semibold w-2/4">Rincian Sampah</th>
+                   <th className="text-right p-3 font-semibold w-1/4">Berat</th>
+                   <th className="text-right p-3 font-semibold w-1/4">Subtotal</th>
+                 </tr>
+               </thead>
+               {filteredTransactionsForDisplay.length === 0 ? (
+                 <tbody>
+                   <tr>
+                     <td colSpan={4} className="text-center py-8 text-muted-foreground">
+                       {transactions.length === 0 ? "Belum ada data transaksi" : "Tidak ada data yang sesuai dengan filter"}
+                     </td>
+                   </tr>
+                 </tbody>
+               ) : (
+                 filteredTransactionsForDisplay.map((trx) => (
+                   <tbody key={trx.id} className="border-b last:border-b-0">
+                     <tr className="bg-muted/30">
+                       <td className="p-3 font-semibold align-top">
+                         <div>
+                           <p>{formatDateOnly(trx.timestamp)}</p>
+                           <p className="text-xs text-muted-foreground font-normal">
+                             {trx.timestamp.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                           </p>
+                         </div>
+                       </td>
+                       <td colSpan={3} className="p-3 font-semibold align-top">{trx.nama_nasabah}</td>
+                     </tr>
+                     {trx.tipe === 'setor' && trx.items?.map((item, index) => (
+                       <tr key={index} className="hover:bg-muted/50">
+                         <td></td>
+                         <td className="py-2 pl-3">
+                           <p className="font-medium">{item.nama_sampah}</p>
+                           <p className="text-xs text-muted-foreground">{formatRupiah(Number(item.harga_kg) || 0)}/kg</p>
+                         </td>
+                         <td className="py-2 px-3 text-right">{(Number(item.berat_kg) || 0).toFixed(1)} kg</td>
+                         <td className="py-2 px-3 text-right">{formatRupiah(Number(item.subtotal) || 0)}</td>
+                       </tr>
+                     ))}
+                     {trx.tipe === 'tarik' && (
+                       <tr className="hover:bg-muted/50">
+                         <td></td>
+                         <td colSpan={2} className="py-2 pl-3 italic text-muted-foreground">Penarikan Saldo</td>
+                         <td className="py-2 px-3 text-right text-destructive font-semibold">{formatRupiah(Number(trx.total_harga) || 0)}</td>
+                       </tr>
+                     )}
+                     <tr className="bg-muted/30 font-semibold">
+                       <td colSpan={2} className="p-3 text-right">Total Transaksi</td>
+                       <td className="p-3 text-right">
+                         {trx.tipe === 'setor' ? `${(Number(trx.total_berat_kg) || 0).toFixed(1)} kg` : '-'}
+                       </td>
+                       <td className={`p-3 text-right ${trx.tipe === 'setor' ? 'text-success' : 'text-destructive'}`}>
+                         {formatRupiah(Number(trx.total_harga) || 0)}
+                       </td>
+                     </tr>
+                   </tbody>
+                 ))
+               )}
+             </table>
+           </div>
+         </Card>
       </div>
     </div>
   );

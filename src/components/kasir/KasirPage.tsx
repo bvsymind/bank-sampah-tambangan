@@ -45,7 +45,7 @@ export function KasirPage() {
       );
       toast({
         title: "Item Diperbarui",
-        description: `${selectedWasteType.nama} ditambahkan ${weight}kg. Total sekarang: ${existingItem.berat_kg + weight}kg`
+        description: `${selectedWasteType.nama} ditambahkan ${weight}kg. Total sekarang: ${existingItem.berat_kg + weight} kg`
       });
     } else {
       const newItem: TransactionItem = {
@@ -58,7 +58,7 @@ export function KasirPage() {
       setTransactionItems(prev => [...prev, newItem]);
       toast({
         title: "Item Ditambahkan",
-        description: `${selectedWasteType.nama} ${weight}kg berhasil ditambahkan`
+        description: `${selectedWasteType.nama} ${weight} kg berhasil ditambahkan`
       });
     }
   };
@@ -110,7 +110,6 @@ export function KasirPage() {
         description: `Transaksi untuk ${selectedCustomer.nama} berhasil disimpan`
       });
 
-      // Reset state setelah transaksi berhasil
       setSelectedCustomer(null);
       setTransactionItems([]);
       
